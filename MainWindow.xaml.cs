@@ -89,6 +89,13 @@ namespace QuickPaste
                 ShowTemporaryPopup("Copied");
             };
 
+            var contextMenu = new ContextMenu();
+            var menuItemDelete = new MenuItem { Header = "Delete" };
+            menuItemDelete.Click += (s, e) => ConfirmDeleteButton(buttonInfo["ButtonName"].ToString());
+            contextMenu.Items.Add(menuItemDelete);
+
+            button.ContextMenu = contextMenu;
+
             return button;
         }
 
@@ -205,6 +212,141 @@ namespace QuickPaste
                 popup.IsOpen = false;
             };
             timer.Start();
+        }
+
+        /// <summary>
+        /// Adds a new button to the JSON configuration file and refreshes the UI.
+        /// </summary>
+        /// <param name="buttonName">The name of the button to be added.</param>
+        /// <param name="copyText">The text that will be copied to the clipboard when this button is clicked.</param>
+        /// <remarks>
+        /// This method checks if a button with the same name already exists to avoid duplicates.
+        /// If a duplicate is found, it shows a message box and does not add the button.
+        /// </remarks>
+        private void AddButton(string buttonName, string copyText)
+        {
+            var buttons = ReadAndValidateJson(_quickPasteSettingsFilePath);
+            if (buttons == null)
+            {
+                MessageBox.Show("Failed to load buttons.");
+                return;
+            }
+
+            if (buttons.Any(b => b["ButtonName"].ToString() == buttonName))
+            {
+                MessageBox.Show("A button with this name already exists.");
+                return;
+            }
+
+            var newButton = new JObject
+            {
+                ["ButtonName"] = buttonName,
+                ["CopyText"] = copyText
+            };
+            buttons.Add(newButton);
+            File.WriteAllText(_quickPasteSettingsFilePath, buttons.ToString());
+            RefreshButtons();
+        }
+
+        /// <summary>
+        /// Removes an existing button from the JSON configuration file and refreshes the UI.
+        /// </summary>
+        /// <param name="buttonName">The name of the button to be removed.</param>
+        /// <remarks>
+        /// This method searches for a button with the specified name and removes it from the configuration.
+        /// If the button is not found, it shows a message box.
+        /// </remarks>
+        private void RemoveButton(string buttonName)
+        {
+            var buttons = ReadAndValidateJson(_quickPasteSettingsFilePath);
+            if (buttons == null)
+            {
+                MessageBox.Show("Failed to load buttons.");
+                return;
+            }
+
+            var buttonToRemove = buttons.FirstOrDefault(b => b["ButtonName"].ToString() == buttonName);
+            if (buttonToRemove == null)
+            {
+                MessageBox.Show("Button not found.");
+                return;
+            }
+
+            buttons.Remove(buttonToRemove);
+            File.WriteAllText(_quickPasteSettingsFilePath, buttons.ToString());
+            RefreshButtons();
+        }
+
+        /// <summary>
+        /// Refreshes the UI by reloading the buttons from the JSON configuration file.
+        /// </summary>
+        /// <remarks>
+        /// This method clears the current buttons from the UI and then reloads them from the configuration file.
+        /// If the configuration file is empty or invalid, it shows a message box.
+        /// </remarks>
+        private void RefreshButtons()
+        {
+            var buttons = ReadAndValidateJson(_quickPasteSettingsFilePath);
+            if (buttons == null || !buttons.Any())
+            {
+                MessageBox.Show("No buttons data found or invalid file format.");
+                return;
+            }
+
+            if (!(FindName("buttonsPanel") is Panel panel))
+            {
+                MessageBox.Show("Panel not found in the current context.");
+                return;
+            }
+
+            panel.Children.Clear();
+            AddButtonsToPanel(buttons, panel);
+        }
+
+        /// <summary>
+        /// Opens the popup for adding a new button.
+        /// </summary>
+        /// <param name="sender">The object that raised the event.</param>
+        /// <param name="e">Event data.</param>
+        private void AddButton_Click(object sender, RoutedEventArgs e)
+        {
+            addButtonPopup.IsOpen = true;
+        }
+
+        /// <summary>
+        /// Confirms the addition of a new button. Validates the input fields and adds the button if valid.
+        /// </summary>
+        /// <param name="sender">The object that raised the event.</param>
+        /// <param name="e">Event data.</param>
+        private void ConfirmAddButton_Click(object sender, RoutedEventArgs e)
+        {
+            string buttonName = newButtonName.Text;
+            string copyText = newCopyText.Text;
+
+            if (!string.IsNullOrWhiteSpace(buttonName) && !string.IsNullOrWhiteSpace(copyText))
+            {
+                AddButton(buttonName, copyText);
+                addButtonPopup.IsOpen = false;
+            }
+            else
+            {
+                MessageBox.Show("Buton adı ve kopyalama metni boş bırakılamaz.");
+            }
+        }
+
+        /// <summary>
+        /// Confirms the deletion of a button. Displays a confirmation dialog and deletes the button if confirmed.
+        /// </summary>
+        /// <param name="buttonName">The name of the button to be deleted.</param>
+        private void ConfirmDeleteButton(string buttonName)
+        {
+            var result = MessageBox.Show($"Are you sure you want to delete '{buttonName}'?",
+                                         "Confirm Delete", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+
+            if (result == MessageBoxResult.Yes)
+            {
+                RemoveButton(buttonName);
+            }
         }
     }
 }

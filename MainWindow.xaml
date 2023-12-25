@@ -5,6 +5,7 @@
         SizeToContent="WidthAndHeight"
         Background="#333333"
         ResizeMode="NoResize">
+
     <Window.Resources>
         <Style x:Key="ButtonStyle" TargetType="Button">
             <Setter Property="Foreground" Value="White" />
@@ -18,9 +19,9 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="border"
-                            Background="{TemplateBinding Background}"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            Padding="{TemplateBinding Padding}">
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
                         <ControlTemplate.Triggers>
@@ -32,9 +33,57 @@
                 </Setter.Value>
             </Setter>
         </Style>
+        <Style x:Key="AddButtonStyle" TargetType="Button">
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="Background" Value="#1E90FF" />
+            <!-- Dodger Blue -->
+            <Setter Property="BorderBrush" Value="#1C86EE" />
+            <Setter Property="Padding" Value="10,5" />
+            <Setter Property="Margin" Value="10" />
+            <Setter Property="Width" Value="200" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#1C86EE" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel x:Name="buttonsPanel" HorizontalAlignment="Center" VerticalAlignment="Top">
-        </StackPanel>
-    </ScrollViewer>
+
+    <Grid>
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Top">
+                <Button x:Name="addButton" Content="Add New" Style="{StaticResource AddButtonStyle}"
+                        Click="AddButton_Click" />
+
+                <StackPanel x:Name="buttonsPanel" Margin="10">
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+
+        <Popup x:Name="addButtonPopup" Placement="Center" AllowsTransparency="True" IsOpen="False">
+            <Border Background="White" Padding="10" CornerRadius="5">
+                <StackPanel>
+                    <TextBlock Text="Button Name:" Foreground="Black"/>
+                    <TextBox x:Name="newButtonName" Foreground="Black"/>
+                    <TextBlock Text="Copy Text:" Foreground="Black"/>
+                    <TextBox x:Name="newCopyText" Foreground="Black"/>
+                    <Button Content="Add" Click="ConfirmAddButton_Click"/>
+                </StackPanel>
+            </Border>
+        </Popup>
+    </Grid>
 </Window>
