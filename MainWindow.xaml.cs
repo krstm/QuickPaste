@@ -3,11 +3,11 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
-using System.Windows.Threading;
 
 namespace QuickPaste
 {
@@ -29,7 +29,7 @@ namespace QuickPaste
         /// </summary>
         /// <param name="filePath">The file path of the JSON file.</param>
         /// <returns>A JArray of button information.</returns>
-        private JArray ReadAndValidateJson(string filePath)
+        private async Task<JArray> ReadAndValidateJson(string filePath)
         {
             if (string.IsNullOrEmpty(filePath))
             {
@@ -39,18 +39,18 @@ namespace QuickPaste
 
             if (!File.Exists(filePath))
             {
-                return CreateInitialJsonFile(filePath);
-            }
-
-            var json = File.ReadAllText(filePath);
-            if (string.IsNullOrEmpty(json))
-            {
-                MessageBox.Show("File content is empty.");
-                return null;
+                return await CreateInitialJsonFile(filePath);
             }
 
             try
             {
+                var json = await File.ReadAllTextAsync(filePath);
+                if (string.IsNullOrEmpty(json))
+                {
+                    MessageBox.Show("File content is empty.");
+                    return null;
+                }
+
                 return JArray.Parse(json);
             }
             catch (JsonReaderException jrex)
@@ -132,7 +132,7 @@ namespace QuickPaste
         /// Loads buttons from JSON file and adds them to the panel.
         /// </summary>
         /// <param name="filePath">The file path of the JSON file.</param>
-        private void LoadButtonsFromJson(string filePath)
+        private async Task LoadButtonsFromJson(string filePath)
         {
             if (string.IsNullOrEmpty(filePath))
             {
@@ -140,7 +140,7 @@ namespace QuickPaste
                 return;
             }
 
-            var buttons = ReadAndValidateJson(filePath);
+            var buttons = await ReadAndValidateJson(filePath);
             if (buttons == null || !buttons.Any())
             {
                 MessageBox.Show("No buttons data found in the file or invalid file format.");
@@ -161,7 +161,7 @@ namespace QuickPaste
         /// </summary>
         /// <param name="filePath">The file path where the JSON file will be created.</param>
         /// <returns>A JArray of initial button information.</returns>
-        private JArray CreateInitialJsonFile(string filePath)
+        private async Task<JArray> CreateInitialJsonFile(string filePath)
         {
             try
             {
@@ -173,7 +173,7 @@ namespace QuickPaste
                         ["CopyText"] = "Test"
                     }
                 };
-                File.WriteAllText(filePath, initialButton.ToString());
+                await File.WriteAllTextAsync(filePath, initialButton.ToString());
                 ShowTemporaryPopup("New JSON file created.", 2);
                 return initialButton;
             }
@@ -189,7 +189,7 @@ namespace QuickPaste
         /// </summary>
         /// <param name="message">The message to be displayed in the popup.</param>
         /// <param name="displaySeconds">The duration in seconds for which the popup will be displayed. Default is 1 second.</param>
-        private void ShowTemporaryPopup(string message, int displaySeconds = 1)
+        private async Task ShowTemporaryPopup(string message, int displaySeconds = 1)
         {
             var popup = new Popup
             {
@@ -205,13 +205,9 @@ namespace QuickPaste
                 }
             };
 
-            var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(displaySeconds) };
-            timer.Tick += (sender, args) =>
-            {
-                timer.Stop();
-                popup.IsOpen = false;
-            };
-            timer.Start();
+            await Task.Delay(TimeSpan.FromSeconds(displaySeconds));
+
+            popup.IsOpen = false;
         }
 
         /// <summary>
@@ -223,9 +219,9 @@ namespace QuickPaste
         /// This method checks if a button with the same name already exists to avoid duplicates.
         /// If a duplicate is found, it shows a message box and does not add the button.
         /// </remarks>
-        private void AddButton(string buttonName, string copyText)
+        private async Task AddButton(string buttonName, string copyText)
         {
-            var buttons = ReadAndValidateJson(_quickPasteSettingsFilePath);
+            var buttons = await ReadAndValidateJson(_quickPasteSettingsFilePath);
             if (buttons == null)
             {
                 MessageBox.Show("Failed to load buttons.");
@@ -244,7 +240,7 @@ namespace QuickPaste
                 ["CopyText"] = copyText
             };
             buttons.Add(newButton);
-            File.WriteAllText(_quickPasteSettingsFilePath, buttons.ToString());
+            await File.WriteAllTextAsync(_quickPasteSettingsFilePath, buttons.ToString());
             RefreshButtons();
         }
 
@@ -256,9 +252,9 @@ namespace QuickPaste
         /// This method searches for a button with the specified name and removes it from the configuration.
         /// If the button is not found, it shows a message box.
         /// </remarks>
-        private void RemoveButton(string buttonName)
+        private async Task RemoveButton(string buttonName)
         {
-            var buttons = ReadAndValidateJson(_quickPasteSettingsFilePath);
+            var buttons = await ReadAndValidateJson(_quickPasteSettingsFilePath);
             if (buttons == null)
             {
                 MessageBox.Show("Failed to load buttons.");
@@ -273,7 +269,7 @@ namespace QuickPaste
             }
 
             buttons.Remove(buttonToRemove);
-            File.WriteAllText(_quickPasteSettingsFilePath, buttons.ToString());
+            await File.WriteAllTextAsync(_quickPasteSettingsFilePath, buttons.ToString());
             RefreshButtons();
         }
 
@@ -284,9 +280,9 @@ namespace QuickPaste
         /// This method clears the current buttons from the UI and then reloads them from the configuration file.
         /// If the configuration file is empty or invalid, it shows a message box.
         /// </remarks>
-        private void RefreshButtons()
+        private async Task RefreshButtons()
         {
-            var buttons = ReadAndValidateJson(_quickPasteSettingsFilePath);
+            var buttons = await ReadAndValidateJson(_quickPasteSettingsFilePath);
             if (buttons == null || !buttons.Any())
             {
                 MessageBox.Show("No buttons data found or invalid file format.");
@@ -338,15 +334,26 @@ namespace QuickPaste
         /// Confirms the deletion of a button. Displays a confirmation dialog and deletes the button if confirmed.
         /// </summary>
         /// <param name="buttonName">The name of the button to be deleted.</param>
-        private void ConfirmDeleteButton(string buttonName)
+        private async Task ConfirmDeleteButton(string buttonName)
         {
             var result = MessageBox.Show($"Are you sure you want to delete '{buttonName}'?",
                                          "Confirm Delete", MessageBoxButton.YesNo, MessageBoxImage.Warning);
 
             if (result == MessageBoxResult.Yes)
             {
-                RemoveButton(buttonName);
+                await RemoveButton(buttonName);
             }
+        }
+
+        /// <summary>
+        /// Handles the click event of the close button in the popup.
+        /// Closes the popup when the button is clicked.
+        /// </summary>
+        /// <param name="sender">The object that triggered the event.</param>
+        /// <param name="e">Event data.</param>
+        private void ClosePopup_Click(object sender, RoutedEventArgs e)
+        {
+            addButtonPopup.IsOpen = false;
         }
     }
 }
