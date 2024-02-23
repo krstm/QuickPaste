@@ -85,8 +85,8 @@ namespace QuickPaste.Utilities
                 {
                     new JObject
                     {
-                        ["ButtonName"] = "Test",
-                        ["CopyText"] = "Test"
+                        ["ButtonName"] = "Title",
+                        ["CopyText"] = "Copied Text"
                     }
                 };
                 var encryptedJson = EncryptionHelper.EncryptString(initialButton.ToString(), ConvertToUnsecureString(encryptionKey));
@@ -178,16 +178,10 @@ namespace QuickPaste.Utilities
         /// <returns>True if the password is valid and the file is successfully decrypted, otherwise false.</returns>
         public static bool CheckPassword(string filePath, SecureString encryptionKey)
         {
-            if (string.IsNullOrEmpty(filePath))
+            if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
             {
-                DialogHelper.ShowErrorMessage("File path is null or empty.");
-                return false;
-            }
-
-            if (!File.Exists(filePath))
-            {
-                DialogHelper.ShowErrorMessage("File does not exist.");
-                return false;
+                CreateInitialJsonFile(filePath, encryptionKey);
+                return true;
             }
 
             try

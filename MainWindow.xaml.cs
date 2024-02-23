@@ -188,7 +188,7 @@ namespace QuickPaste
         private async Task RefreshButtons()
         {
             var buttons = await JsonFileHandler.ReadAndValidateJson(AppConstants.QuickPasteSettingsFilePath, EncryptionKey);
-            if (buttons == null || !buttons.Any())
+            if (buttons == null)
             {
                 DialogHelper.ShowErrorMessage("No buttons data found or invalid file format.");
                 return;
@@ -223,11 +223,14 @@ namespace QuickPaste
         {
             string buttonName = newButtonName.Text;
             string copyText = newCopyText.Text;
+            
 
             if (!string.IsNullOrWhiteSpace(buttonName) && !string.IsNullOrWhiteSpace(copyText))
             {
                 AddButton(buttonName, copyText);
                 addButtonPopup.IsOpen = false;
+                newButtonName.Text = string.Empty;
+                newCopyText.Text = string.Empty;
             }
             else
             {
@@ -258,6 +261,8 @@ namespace QuickPaste
         private void ClosePopup_Click(object sender, RoutedEventArgs e)
         {
             addButtonPopup.IsOpen = false;
+            newButtonName.Text = string.Empty;
+            newCopyText.Text = string.Empty;
         }
     }
 }

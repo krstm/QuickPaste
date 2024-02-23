@@ -52,10 +52,6 @@ namespace QuickPaste
                 DialogResult = true;
                 Close();
             }
-            else
-            {
-                MessageBox.Show("Password is invalid. It must be between 4 and 32 characters.");
-            }
         }
 
         /// <summary>
@@ -67,13 +63,32 @@ namespace QuickPaste
         {
             if (securePassword.Length >= 4 && securePassword.Length <= 32)
             {
-                return JsonFileHandler.CheckPassword(AppConstants.QuickPasteSettingsFilePath, securePassword);
+                var checkPassword = JsonFileHandler.CheckPassword(AppConstants.QuickPasteSettingsFilePath, securePassword);
+                if (checkPassword)
+                {
+                    return true;
+                }
+                else
+                {
+                    DialogHelper.ShowErrorMessage("Password is invalid.");
+                    return false;
+                }
             }
             else
             {
                 DialogHelper.ShowErrorMessage("Password is invalid. It must be between 4 and 32 characters.");
                 return false;
             }
+        }
+
+        /// <summary>
+        /// Handles the Loaded event of the window. Sets focus to the PasswordBox for user convenience.
+        /// </summary>
+        /// <param name="sender">The object that raised the event.</param>
+        /// <param name="e">Event data.</param>
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            PasswordBox.Focus();
         }
     }
 }
