@@ -2,7 +2,6 @@
 using QuickPaste.Models;
 using QuickPaste.Utilities;
 using System.Linq;
-using System.Net;
 using System.Security;
 using System.Threading.Tasks;
 using System.Windows;
@@ -223,7 +222,6 @@ namespace QuickPaste
         {
             string buttonName = newButtonName.Text;
             string copyText = newCopyText.Text;
-            
 
             if (!string.IsNullOrWhiteSpace(buttonName) && !string.IsNullOrWhiteSpace(copyText))
             {
