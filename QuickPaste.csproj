@@ -5,11 +5,11 @@
     <TargetFramework>net6.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
-    <ApplicationIcon>qp_icon.ico</ApplicationIcon>
+    <ApplicationIcon>Resources/qp_icon.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="qp_icon.ico" />
+    <Content Include="Resources\qp_icon.ico" />
   </ItemGroup>
 
   <ItemGroup>

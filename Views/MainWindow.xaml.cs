@@ -120,7 +120,7 @@ namespace QuickPaste
             }
 
             var buttons = await JsonFileHandler.ReadAndValidateJson(filePath, EncryptionKey);
-            if (buttons == null || !buttons.Any())
+            if (buttons == null)
             {
                 DialogHelper.ShowErrorMessage("Invalid password or file format error.");
                 return;
